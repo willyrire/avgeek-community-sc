@@ -473,11 +473,7 @@ If you feel this warn was unjustified or the moderator abused, please follow tho
     else:
         await ctx.respond(embed=discord.Embed(title="Insufficient Permissions", description="Only <@&1026225756562538517> can use this command", color=red))
 @bot.command(description="Temporary ban a user")
-@option(
-    "duration",
-    int,
-    description="Time (in day) the user will get banned"
-)
+@option("duration",int,description="Time (in day) the user will get banned")
 async def tempban(ctx, user : discord.Member, duration, reason):
     modop = discord.utils.get(ctx.guild.roles, name="{⚔} Modérateur+")
     modo = discord.utils.get(ctx.guild.roles, name="{🛡} Modérateur")
