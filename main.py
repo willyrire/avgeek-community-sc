@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from random import randint
 import string
 import random
-import base64
 load_dotenv()
 
 token = os.getenv('TOKEN')
@@ -31,12 +30,16 @@ sqldb = os.getenv('SQLDB1')
 
 ###################COLOR VARIABLES###################
 lightblue = 0x5ca3ff
+darkblue = 0x00008B
+turquoise = 0x98F5FF
 red = 0xff0000
 orange = 0xffa500
 yellow = 0xffff00
 greensuccess = 0x81fe8f
 rederror = 0xfe8181
 white = 0xffffff
+purple = 0x8A2BE2
+
 ###################COLOR VARIABLES###################
 
 #bot
@@ -683,17 +686,15 @@ async def reportabuse(ctx, warnid):
 
 @bot.command(description="this command is for test, everyone can use it to see the content of this command")
 async def test(ctx):
-    membercount = ctx.guild.member_count
-    print(membercount)
-    msg = await ctx.send("Hi \nThis is a test")
-    await msg.add_reaction("🇦")
     mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
     bdd = mydb.cursor()
-    bdd.execute("SELECT * FROM avwarns WHERE 1")
+    bdd.execute("SELECT usrid FROM avbank WHERE 1=1")
     result = bdd.fetchall()
+    em = fem(color=greensuccess,title="ID's of people who own a bank account in the server")
     for x in result:
-        usrid = x[0]
-        print(usrid)
+        id = x[0]
+        em.add_field(name="ID", value=id, inline=True)
+    await ctx.respond(embed=em)
 
 @bot.command(description="Send Rules Mesage")
 async def rules(ctx):
@@ -743,16 +744,8 @@ async def rules(ctx):
 #    bdd = mydb.cursor()
 
 @bot.command(description="Make an annoucement")
-@option(
-    "title",
-    str,
-    description="The title in the top of your annoucement"
-)
-@option(
-    "content",
-    str,
-    description="The content of your annoucement"
-)
+@option("title",str,description="The title in the top of your annoucement")
+@option("content",str,description="The content of your annoucement")
 async def makeann(ctx, title, content):
     sr = discord.utils.get(ctx.guild.roles, name="*")
     aid = ctx.author.id
@@ -799,36 +792,12 @@ You have <t:{timeleft}:R> to make a choice"""
 
 #####################################################################
 @bot.command(description="Make the Question of the day || WORKING IN PROGRESS")
-@option(
-    "question",
-    str,
-    description="The question"
-)
-@option(
-    "a",
-    str,
-    description="The option a"
-)
-@option(
-    "b",
-    str,
-    description="The option b"
-)
-@option(
-    "c",
-    str,
-    description="The option c"
-)
-@option(
-    "d",
-    str,
-    description="The option d"
-)
-@option(
-    "goodanswer",
-    str,
-    description="The good answer | a, b, b, d one of those 4"
-)
+@option("question",str,description="The question")
+@option("a",str,description="The option a")
+@option("b",str,description="The option b")
+@option("c",str,description="The option c")
+@option("d",str,description="The option d")
+@option("goodanswer",str,description="The good answer | a, b, b, d one of those 4")
 async def questionoftheday(ctx, question, a, b, c, d, goodanswer):
     rer = get(ctx.guild.roles, name="{❓❔} Question of the day")
     ar = ctx.author.roles
@@ -1044,16 +1013,8 @@ async def bank(ctx):
         await ctx.respond(embed=em)
 
 @bot.command(description="Change, add, remove and reset money from someone")
-@option(
-    "action",
-    int,
-    description="1- change value, 2- add monney, 3 - remove money, 4 - reset"
-)
-@option(
-    "value",
-    int,
-    description="The amount to set/add/remove for reset set to 0"
-)
+@option("action",int,description="1- change value, 2- add monney, 3 - remove money, 4 - reset")
+@option("value",int,description="The amount to set/add/remove for reset set to 0")
 async def economy(ctx, user : discord.Member,action, value):
     await ctx.respond(embed=fem(title="Processing...", description="Processing your request", color=lightblue))
     rer = get(ctx.guild.roles, name="*")
@@ -1133,6 +1094,52 @@ async def economy(ctx, user : discord.Member,action, value):
     else:
         await ctx.edit(embed=fem(title="Insufficient Permissions",description="Only hight ranked members are allowed to use this command", color=red))
 
+@bot.command(description="See all items in the shop")
+async def shop(ctx):
+    mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
+    bdd = mydb.cursor()
+    bdd.execute("SELECT * FROM avecoshop WHERE 1=1")
+    result = bdd.fetchall()
+    row = bdd.rowcount
+    if row == 0 :
+        await ctx.respond(embed=fem(title="🛒 Shop 👜", description="The shop is empty", color=yellow))
+    else:
+        em = fem(title="🛒 Shop 👜",description="Here you can see the list of all buyable advantage/perks and their price. If you want to buy one, just do /buy <id> *Change the '<id>' by the id of the item* To see more informations about an item, do /buy <id> informations about the item will be gived to you aswell",color=purple)
+        for x in result:
+            id = x[0]
+            name = x[1]
+            price = x[2]
+            if price == 1500000:
+                price = "1'500'000"
+            elif price == 1000000:
+                price = "1'000'000"
+            em.add_field(name="__ID__", value=id, inline=True)
+            em.add_field(name="__Name__", value=name, inline=True)
+            em.add_field(name="__Price ($)__", value=f"`{price}`$", inline=True)
+        await ctx.respond(embed=em)
+    
+@bot.command(description="Add item in the shop")
+@option("name",str,description="The name if the item")
+@option("price",int,description="The Price to buy it")
+async def additem(ctx, name, price):
+    mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
+    bdd = mydb.cursor()
+    rer = get(ctx.guild.roles, name="*")
+    ar = ctx.author.roles
+    if rer in ar:
+        id = randint(10000,999999)
+        name = str(name)
+        price = int(price)
+        sql = f"INSERT INTO avecoshop(id, name, price) VALUES({id}, '{name}', {price})"
+        bdd.execute(sql)
+        mydb.commit()
+        await ctx.respond(embed=fem(title="[+] New item in shop", description=f"""Successfully added item in the shop
+        **ID :** {id}
+        **Name :** {name}
+        **Price :** `{price}`$
+         """, color=greensuccess))
+    else:
+        await ctx.respond(embed=fem(title="Insufficients Permissions", description="Only hight ranked members can use this command", color=red))
 #########################################################
 
 @bot.command(description="Infos About the bot")
