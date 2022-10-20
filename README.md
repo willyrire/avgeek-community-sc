@@ -1,5 +1,5 @@
 # avgeek-community-sc
 Source Code of the AvGeek Community Bot
 Wassup, dont realy want to make readme but here is the code
-<br\>
+<br/>
 The server where the bot is : https://discord.gg/WGVneaZyPw
