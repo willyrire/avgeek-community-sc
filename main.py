@@ -36,7 +36,8 @@ red = 0xff0000
 orange = 0xffa500
 yellow = 0xffff00
 greensuccess = 0x81fe8f
-rederror = 0xfe8181
+rederror = 0xFF3030
+rederror1 = 0xfe8181
 white = 0xffffff
 purple = 0x8A2BE2
 
@@ -80,6 +81,7 @@ async def on_ready():
     print("===============================================================================================")
     print()
     print()
+
 @bot.event # Quand quelqu'un rejoind le serveur
 async def on_member_join(member):
     mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
@@ -267,7 +269,12 @@ async def on_message(ctx):
     if row == 0:
         bdd.execute(f"INSERT INTO avbank(usrid) VALUES({aid})")
         mydb.commit()
-        bdd.execute(f"INSERT INTO avbanksettings(usrid) VALUES({aid})")
+    else:
+        win = randint(1,50)
+        for x in result:
+            money = x[2]
+        nmoney = money+win
+        bdd.execute(f"UPDATE avbank SET money = {nmoney} WHERE usrid = {aid}")
         mydb.commit()
 ######################EVENTS######################
 #####################COMMANDS#####################
@@ -1138,11 +1145,91 @@ async def additem(ctx, name, price):
         await ctx.respond(embed=fem(title="Insufficients Permissions", description="Only hight ranked members can use this command", color=red))
 #########################################################
 
+@bot.command(description="Buy an item/ a perk from the shop")
+@option("item",int,description="The id of the item")
+async def buy(ctx, item):
+    item = int(item)
+    mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
+    bdd = mydb.cursor()
+
+    # First lets make sure the specified id is in the database
+    bdd.execute(f"SELECT * FROM avecoshop WHERE id = {item}")
+    result = bdd.fetchall()
+    row = bdd.rowcount
+    if row == 1:
+        aid = ctx.author.id
+        for x in result:
+            id = x[0]
+            name = x[1]
+            price = x[2]
+        bdd.execute(f"SELECT * FROM avbank WHERE usrid = {aid}")
+        result = bdd.fetchall()
+        row = bdd.rowcount
+        if row == 1:
+            for x in result:
+                money = x[2]
+            if money >= price:
+                money = money-price
+                if money-price >=0:
+                    bdd.execute(f"SELECt * FROM avinv WHERE usrid = {aid} AND itemid = {id}")
+                    re = bdd.fetchall()
+                    row = bdd.rowcount
+                    if row == 0:
+                        sql = f"UPDATE avbank SET money = {money} WHERE usrid = {aid}"
+                        bdd.execute(sql)
+                        mydb.commit()
+                        usrid = ctx.author.id
+                        itemid = id
+                        name = name
+                        value = price/100*80
+                        sql = "INSERT INTO avinv(usrid, itemid, name, value) VALUES(%s,%s,%s,%s)"
+                        val = (usrid, itemid, f'{name}', value)
+                        bdd.execute(sql, val)
+                        mydb.commit()
+                        await ctx.respond(embed=fem(title="Purchase Success", description="You successfully bought this item. if the item was something about a advertising or publishing the video you want on the AvGeek Community's tiktok, please open a ticket <#1032758843807105145>", color=greensuccess))
+                    else:
+                        await ctx.respond(embed=fem(title="Already Owned", description="What is the utility to buy something you already own hmm? EXPLAIN ME. More seriously, you already own this item and cant buy it again ! Except if you use it (he will automaticly get removed from your inventory)", color=rederror))                    
+                else:
+                    await ctx.respond(embed=fem(title="Ewwww...something weird happened", description="Dont try to bypass anything okay? The thing you tried to do will had set you to a negative amount of money...and if its the case...no need to remember that -- = + hmm. Anyway. here is your error code : ||123STOPTHATPLEASE||", color=red))
+            else:
+                em = fem(color=rederror, title="Insufficients Found", description="You do NOT have enought money to buy this")
+                rdmimgerr = randint(1,10)
+                if rdmimgerr == 1:
+                    em.set_image(url='https://t3.ftcdn.net/jpg/04/87/13/36/240_F_487133606_PREvYLaez14eMIHDQfEQUyUy2t0LNHI2.jpg')
+                elif rdmimgerr == 2:
+                    em.set_image(url='https://i.etsystatic.com/19798055/r/il/366606/4175079159/il_340x270.4175079159_qhux.jpg')
+                elif rdmimgerr == 3:
+                    em.set_image(url='https://ogp.hinative.com/ogp/question?dlid=22&l=en-US&lid=22&txt=you+have+insufficient+funds.+You+can+not+buy+this+because+you+have+run+out+of+money.&ctk=whatsay&ltk=japanese&qt=WhatsayQuestion')
+                elif rdmimgerr == 4:
+                    em.set_image(url='https://i.pinimg.com/originals/dc/da/99/dcda995198172ab40d90bbf05beafe12.jpg')
+                elif rdmimgerr == 5:
+                    em.set_image(url='https://i.imgflip.com/4kd7y8.jpg')
+                elif rdmimgerr == 6:
+                    em.set_image(url='https://www.mememaker.net/static/images/memes/4817319.jpg')
+                elif rdmimgerr == 7:
+                    em.set_image(url='https://images.squarespace-cdn.com/content/v1/5d2a1edff8bc0c0001e8ec63/1594586207457-7C7VMK1ZB0KHAE5X1HAP/i-have-no-money-meme1.jpeg')
+                elif rdmimgerr == 8:
+                    em.set_image(url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQY3KrMwBzRUPO4JK_a7a2YJy-kr0ougdXlVg&usqp=CAU')
+                elif rdmimgerr == 9:
+                    em.set_image(url='https://media.makeameme.org/created/no-money-13bd8b451c.jpg')
+                elif rdmimgerr == 10:
+                    em.set_image(url='https://www.meme-arsenal.com/memes/4a5133b471acb2693f434695383c27b1.jpg')
+                await ctx.respond(embed=em)
+        else:
+            await ctx.respond(embed=fem(title="Error", description="You have no *bank* account in our database. To create one, just do /bank", color=rederror))
+    else:
+        em = fem(color=red)
+        em.title="404 Not Found"
+        em.description="Couldn't Found any item with this id"
+        em.set_author(name=ctx.author)
+        em.set_image(url='https://img.freepik.com/premium-vector/electric-socket-with-plug-connection-disconnection-concept-concept-404-error-connection-electric-plug-outlet-socket-unplugged-wire-cable-energy-disconnect_316493-322.jpg')
+        await ctx.respond(embed=em)
+
 @bot.command(description="Infos About the bot")
 async def version(ctx):
     em = fem(color=lightblue)
     em.title="Bot Infos"
-    em.add_field(name="Version", value="1.2.0", inline=True)
+    em.add_field(name="Version", value="V1.2.1", inline=True)
     em.add_field(name="Creator", value="willyrire#0001", inline=True)
     em.add_field(name="Creation date", value="I forgot lmao", inline=True)
     await ctx.respond(embed=em)
