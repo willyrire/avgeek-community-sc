@@ -126,7 +126,7 @@ Welcome {ausr}#{atag} in the Avgeek Community Server ! Here you can talk with ot
             await member.send(embed=discord.Embed(title="Banned", description=f"""Hello <@{usrid}>,
 You got kicked out of the server cause you have an active ban. That's mean, you have a ban that isnt expired so we cant let you in until its expired. The ban isnt permanently ! Its only temporaly. Sadly, you have no way for the moment to appeal a temporary ban. The only way to get back the access to the server is to wait.
 
-Keep in mind that we like our channels to be calm and chill, so, if you got banned, but temporary, that's probably because you didnt respected our rules. 
+Keep in mind that we like our channels to be calm and chill, so, if you got banned, but temporary, that's probably because you didnt respected our rules.
 
 **==========Ban Infos==========**
 
@@ -146,7 +146,7 @@ Keep in mind that we like our channels to be calm and chill, so, if you got bann
 **You will be allowed to join the server** <t:{expiration}:R>
 
 **Here is a link for you to join the server when your ban is ended :**
-[clicking here](https://discord.gg/WGVneaZyPw) or here https://discord.gg/WGVneaZyPw 
+[clicking here](https://discord.gg/WGVneaZyPw) or here https://discord.gg/WGVneaZyPw
 Also, make sure to read <#1012877013629018204>
 """, color=red))
             await member.guild.kick(member)
@@ -258,7 +258,7 @@ async def on_raw_reaction_remove(reaction):
                 await channel.send(f"```[System] Role (⚜) Quebecois removed from {ausr}```")
                 print(f"[System] Role Québécois removed from {ausr}")
 
-@bot.event 
+@bot.event
 async def on_message(ctx):
     mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
     bdd = mydb.cursor()
@@ -705,7 +705,7 @@ async def rules(ctx):
     role = discord.utils.get(ctx.guild.roles, name="*")
     if role in ar:
         button = Button(label="Accept Rules", style=discord.ButtonStyle.success, emoji="<a:tick:1010913651231825930>")
-        
+
         async def button_callback(interaction):
             role = discord.utils.get(ctx.guild.roles, name="✔ Verified")
             ar = interaction.user.roles
@@ -763,7 +763,7 @@ async def makeann(ctx, title, content):
         timeleft = ctt+30
         em.title="Hold up ! 🛑"
         em.description=f"""You are about to mention {membercount} in this server. Are you sure you want to ping them?
-        
+
 You have <t:{timeleft}:R> to make a choice"""
         yes = Button(label="Yes", style=discord.ButtonStyle.success, emoji="<a:tick:1010913651231825930>")
         no = Button(label="No", style=discord.ButtonStyle.danger, emoji="<a:tickred:637641999507390467>")
@@ -787,7 +787,7 @@ You have <t:{timeleft}:R> to make a choice"""
         view.add_item(yes)
         view.add_item(no)
         await ctx.respond(embed=em, view=view, delete_after=30, ephemeral=True)
-        
+
 
     else:
         await ctx.respond(embed=discord.Embed(title="Insufficient Permission", description="Only hight rank member can use this command", color=red), ephemeral=True)
@@ -863,7 +863,7 @@ async def questionoftheday(ctx, question, a, b, c, d, goodanswer):
                     else:
                         await btn.response.send_message(ephemeral=True,embed=fem(title="Woops...a bit late?", description="This question of the day is expired, you cant answer it anymore, wait for another question of the day ! :D", color=yellow))
                 A.callback = a_callback
-                
+
                 B = Button(style=discord.ButtonStyle.primary, emoji="🇧")
                 async def b_callback(btn):
                     aid = btn.user.id
@@ -895,7 +895,7 @@ async def questionoftheday(ctx, question, a, b, c, d, goodanswer):
                     else:
                         await btn.response.send_message(ephemeral=True,embed=fem(title="Woops...a bit late?", description="This question of the day is expired, you cant answer it anymore, wait for another question of the day ! :D", color=yellow))
                 B.callback = b_callback
-                
+
                 C = Button(style=discord.ButtonStyle.primary, emoji="🇨")
                 async def c_callback(btn):
                     aid = btn.user.id
@@ -927,7 +927,7 @@ async def questionoftheday(ctx, question, a, b, c, d, goodanswer):
                     else:
                         await btn.response.send_message(ephemeral=True,embed=fem(title="Woops...a bit late?", description="This question of the day is expired, you cant answer it anymore, wait for another question of the day ! :D", color=yellow))
                 C.callback = c_callback
-                
+
                 D = Button(style=discord.ButtonStyle.primary, emoji="🇩")
                 async def d_callback(btn):
                     aid = btn.user.id
@@ -1104,6 +1104,7 @@ async def shop(ctx):
     bdd.execute("SELECT * FROM avecoshop WHERE 1=1")
     result = bdd.fetchall()
     row = bdd.rowcount
+    aid = ctx.author.id
     if row == 0 :
         await ctx.respond(embed=fem(title="🛒 Shop 👜", description="The shop is empty", color=yellow))
     else:
@@ -1116,11 +1117,19 @@ async def shop(ctx):
                 price = "1'500'000"
             elif price == 1000000:
                 price = "1'000'000"
-            em.add_field(name="__ID__", value=id, inline=True)
-            em.add_field(name="__Name__", value=name, inline=True)
-            em.add_field(name="__Price ($)__", value=f"`{price}`$", inline=True)
+            bdd.execute(f"SELECT * FROM avinv WHERE itemid = {id} AND usrid = {aid}")
+            re = bdd.fetchall()
+            row = bdd.rowcount
+            if row == 0:
+                em.add_field(name="__ID__", value=id, inline=True)
+                em.add_field(name="__Name__", value=name, inline=True)
+                em.add_field(name="__Price ($)__", value=f"`{price}`$", inline=True)
+            else:
+                em.add_field(name="~~__ID__~~", value=f"~~{id}~~", inline=True)
+                em.add_field(name="~~__Name__~~", value=f"~~{name}~~", inline=True)
+                em.add_field(name="~~__Price ($)__~~", value=f"~~{price}$~~", inline=True)
         await ctx.respond(embed=em)
-    
+
 @bot.command(description="Add item in the shop")
 @option("name",str,description="The name if the item")
 @option("price",int,description="The Price to buy it")
@@ -1181,14 +1190,14 @@ async def buy(ctx, item):
                         usrid = ctx.author.id
                         itemid = id
                         name = name
-                        value = price/100*80
+                        value = price/100*70
                         sql = "INSERT INTO avinv(usrid, itemid, name, value) VALUES(%s,%s,%s,%s)"
                         val = (usrid, itemid, f'{name}', value)
                         bdd.execute(sql, val)
                         mydb.commit()
                         await ctx.respond(embed=fem(title="Purchase Success", description="You successfully bought this item. if the item was something about a advertising or publishing the video you want on the AvGeek Community's tiktok, please open a ticket <#1032758843807105145>", color=greensuccess))
                     else:
-                        await ctx.respond(embed=fem(title="Already Owned", description="What is the utility to buy something you already own hmm? EXPLAIN ME. More seriously, you already own this item and cant buy it again ! Except if you use it (he will automaticly get removed from your inventory)", color=rederror))                    
+                        await ctx.respond(embed=fem(title="Already Owned", description="What is the utility to buy something you already own hmm? EXPLAIN ME. More seriously, you already own this item and cant buy it again ! Except if you use it (he will automaticly get removed from your inventory)", color=rederror))
                 else:
                     await ctx.respond(embed=fem(title="Ewwww...something weird happened", description="Dont try to bypass anything okay? The thing you tried to do will had set you to a negative amount of money...and if its the case...no need to remember that -- = + hmm. Anyway. here is your error code : ||123STOPTHATPLEASE||", color=red))
             else:
@@ -1224,6 +1233,37 @@ async def buy(ctx, item):
         em.set_author(name=ctx.author)
         em.set_image(url='https://img.freepik.com/premium-vector/electric-socket-with-plug-connection-disconnection-concept-concept-404-error-connection-electric-plug-outlet-socket-unplugged-wire-cable-energy-disconnect_316493-322.jpg')
         await ctx.respond(embed=em)
+@bot.command(description="see your inventory | item you buyed etc etc etc.")
+async def inventory(ctx):
+    aid = ctx.author.id
+    mydb = mysql.connector.connect(host=sqlhost,user=sqlusr,password=sqlpswd,database=sqldb)
+    bdd = mydb.cursor()
+    sql = f"SELECT * FROM avinv WHERE usrid = {aid}"
+    bdd.execute(sql)
+    result = bdd.fetchall()
+    row = bdd.rowcount
+    if row >= 1:
+        em = fem(color=orange, title="🎒 Your Inventory 🎒", description="Here you will see every items you owns and details about them")
+        for x in result:
+            usrid = x[0]
+            itemid = x[1]
+            name = x[2]
+            value = x[3]
+            bdd.execute(f"SELECT * FROM avecoshop WHERE id = {itemid}")
+            re = bdd.fetchall()
+            row = bdd.rowcount
+            if row == 1:
+                rare = "Yes"
+            else:
+                rare = "No"
+            em.add_field(name="Item", value=f"""**Name :** {name}
+            **Rare :** {rare}
+            **Value :** {value}
+            **ID :** {itemid}
+            """, inline=False)
+        await ctx.respond(embed=em)
+    else:
+        await ctx.respond(embed=fem(title="No account found", description="We found no bank account with your discord id. Just do the command /bank to create one", color=rederror))
 
 @bot.command(description="Infos About the bot")
 async def version(ctx):
